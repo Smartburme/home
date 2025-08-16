@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Assistant | Smart Chat Bot</title>
+    <title>AI Knowledge Assistant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -59,91 +59,13 @@
             font-size: 1.5rem;
         }
         
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 1.5rem;
-        }
-        
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-        
-        nav a:hover {
-            opacity: 0.8;
-        }
-        
-        main {
-            flex: 1;
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            padding: 1rem;
-            gap: 1rem;
-        }
-        
-        .sidebar {
-            width: 250px;
-            background: white;
-            border-radius: 10px;
-            padding: 1rem;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-history {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 1rem;
-        }
-        
-        .chat-history h3 {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-        }
-        
-        .history-item {
-            padding: 0.5rem;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 0.3rem;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .history-item:hover {
-            background: #f0f2f5;
-        }
-        
-        .settings-btn {
-            background: var(--light-color);
-            border: none;
-            padding: 0.5rem;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.3s;
-        }
-        
-        .settings-btn:hover {
-            background: #e9ecef;
-        }
-        
         #chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
@@ -187,6 +109,27 @@
             border-bottom-left-radius: 5px;
         }
         
+        .message-content {
+            word-wrap: break-word;
+        }
+        
+        .message-links {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .message-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+            margin: 0.3rem 0;
+        }
+        
+        .message-links a:hover {
+            text-decoration: underline;
+        }
+        
         .message-time {
             display: block;
             font-size: 0.7rem;
@@ -208,14 +151,6 @@
             background: #adb5bd;
             border-radius: 50%;
             animation: typingAnimation 1.4s infinite ease-in-out;
-        }
-        
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
         }
         
         @keyframes typingAnimation {
@@ -263,50 +198,20 @@
             background: var(--secondary-color);
         }
         
-        .features {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 0.5rem;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .feature-btn {
-            background: none;
-            border: none;
-            color: #6c757d;
-            cursor: pointer;
-            transition: color 0.3s;
-            font-size: 1.2rem;
-        }
-        
-        .feature-btn:hover {
-            color: var(--primary-color);
-        }
-        
-        footer {
-            text-align: center;
+        .system-info {
             padding: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
             font-size: 0.8rem;
             color: #6c757d;
-            background: white;
-            border-top: 1px solid #e9ecef;
+            text-align: center;
         }
         
         @media (max-width: 768px) {
-            main {
-                flex-direction: column;
-                padding: 0;
-            }
-            
-            .sidebar {
-                width: 100%;
-                border-radius: 0;
-            }
-            
             #chat-container {
+                margin: 0;
                 border-radius: 0;
-                height: calc(100vh - 60px);
+                height: 100vh;
             }
             
             .message {
@@ -319,57 +224,53 @@
     <header>
         <div class="logo">
             <i class="fas fa-robot"></i>
-            <h1>AI Assistant</h1>
+            <h1>AI Knowledge Assistant</h1>
         </div>
-        <nav>
-            <ul>
-                <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                <li><a href="#"><i class="fas fa-question-circle"></i> Help</a></li>
-            </ul>
-        </nav>
+        <div class="system-mode">
+            <span id="system-status">Basic Mode</span>
+        </div>
     </header>
     
-    <main>
-        <aside class="sidebar">
-            <div class="chat-history">
-                <h3><i class="fas fa-history"></i> Chat History</h3>
-                <div class="history-item">How to create a function?</div>
-                <div class="history-item">Explain AI technology</div>
-                <div class="history-item">Python vs JavaScript</div>
-                <!-- History items will be populated by JavaScript -->
-            </div>
-            <button class="settings-btn">
-                <i class="fas fa-sliders-h"></i> Settings
-            </button>
-        </aside>
-        
-        <div id="chat-container">
-            <div id="chat-messages">
-                <!-- Messages will be inserted here by JavaScript -->
-            </div>
-            
-            <div class="features">
-                <button class="feature-btn" title="Attach file"><i class="fas fa-paperclip"></i></button>
-                <button class="feature-btn" title="Voice input"><i class="fas fa-microphone"></i></button>
-                <button class="feature-btn" title="Clear chat"><i class="fas fa-trash-alt"></i></button>
-            </div>
-            
-            <div class="input-container">
-                <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
-                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
-            </div>
+    <div id="chat-container">
+        <div id="chat-messages">
+            <!-- Messages will be inserted here by chat.js -->
         </div>
-    </main>
-    
-    <footer>
-        <p>© 2023 AI Assistant. All rights reserved. Powered by advanced AI technology.</p>
-    </footer>
+        
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
+            <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        
+        <div class="system-info">
+            <p>Basic queries answered from knowledge base | Complex queries processed through external resources</p>
+        </div>
+    </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/engine.js"></script>
+    <!-- Knowledge Base System -->
+    <!-- Basic Knowledge -->
     <script src="docs/knowledge-1.js"></script>
     <script src="docs/knowledge-2.js"></script>
+    
+    <!-- Link Databases -->
+    <script src="docs/text-link.js"></script>
+    <script src="docs/coder-link.js"></script>
+    <script src="docs/image-link.js"></script>
+    
+    <!-- Knowledge Resources -->
+    <script src="knowledge/text-knowledge.js"></script>
+    <script src="knowledge/coder-knowledge.js"></script>
+    <script src="knowledge/image-knowledge.js"></script>
+    
+    <!-- Processing Engine -->
+    <script src="js/reader-link.js"></script>
+    <script src="js/engine.js"></script>
+    
+    <!-- Chat Interface -->
     <script src="js/chat.js"></script>
+    
+    <script>
+        // Initialize system status indicator
+        document.getElementById('system-status').textContent = 'Knowledge System Ready';
+    </script>
 </body>
-    </html>
+</html>
