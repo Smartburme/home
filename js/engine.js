@@ -1,115 +1,116 @@
-// Enhanced Knowledge Processing System
-class KnowledgeProcessor {
+// engine.js - Core Knowledge Processing Engine
+class KnowledgeEngine {
   constructor() {
-    this.knowledgeBases = [];
-    this.searchStrategies = [
-      this.exactMatchSearch,
-      this.partialMatchSearch,
-      this.synonymSearch,
-      this.externalResourceSearch
-    ];
+    this.knowledgeBases = {};
+    this.initialized = false;
   }
 
-  // Initialize with knowledge bases
-  initKnowledgeBases(...bases) {
-    this.knowledgeBases = bases.filter(base => base !== undefined);
+  // Initialize knowledge bases
+  async init() {
+    if (this.initialized) return;
+    
+    // Load basic knowledge
+    this.knowledgeBases.basic = {
+      knowledge1: typeof knowledge1 !== 'undefined' ? knowledge1 : {},
+      knowledge2: typeof knowledge2 !== 'undefined' ? knowledge2 : {}
+    };
+    
+    // Initialize reader-link system
+    if (typeof initReaderLink === 'function') {
+      await initReaderLink();
+    }
+    
+    this.initialized = true;
+    console.log("Knowledge engine initialized");
   }
 
   // Main processing function
-  async processUserInput(input) {
-    if (!input || typeof input !== 'string') {
-      return "Please provide a valid input.";
-    }
-
+  async processInput(input) {
+    if (!this.initialized) await this.init();
+    
+    // Clean and prepare input
     const query = input.trim().toLowerCase();
-    let response = null;
+    if (!query) return "Please enter a valid query.";
 
-    // Try each search strategy in order
-    for (const strategy of this.searchStrategies) {
-      response = await strategy.call(this, query);
-      if (response) break;
+    // Try basic knowledge first
+    const basicResponse = this.queryBasicKnowledge(query);
+    if (basicResponse.found) {
+      return {
+        content: basicResponse.answer,
+        mode: 'basic',
+        sources: ['knowledge-1.js', 'knowledge-2.js']
+      };
     }
 
-    return response || this.getDefaultResponse(query);
+    // Fall back to advanced knowledge
+    const advancedResponse = await this.queryAdvancedKnowledge(query);
+    if (advancedResponse) {
+      return {
+        content: advancedResponse.answer,
+        mode: 'advanced',
+        sources: advancedResponse.sources,
+        links: advancedResponse.links,
+        specialContent: advancedResponse.specialContent
+      };
+    }
+
+    // Final fallback
+    return {
+      content: "I couldn't find information about that topic.",
+      mode: 'basic',
+      sources: []
+    };
   }
 
-  // 1. Exact match search
-  exactMatchSearch(query) {
-    for (const base of this.knowledgeBases) {
-      if (base[query]) {
-        return base[query];
+  // Query basic knowledge bases
+  queryBasicKnowledge(query) {
+    for (const [name, kb] of Object.entries(this.knowledgeBases.basic)) {
+      if (kb[query]) {
+        return { found: true, answer: kb[query] };
       }
-    }
-    return null;
-  }
-
-  // 2. Partial match search
-  partialMatchSearch(query) {
-    for (const base of this.knowledgeBases) {
-      const match = Object.entries(base).find(([key]) => 
-        query.includes(key) || key.includes(query)
-      );
-      if (match) return match[1];
-    }
-    return null;
-  }
-
-  // 3. Synonym-based search
-  synonymSearch(query) {
-    const synonyms = this.getSynonyms(query);
-    for (const base of this.knowledgeBases) {
-      for (const syn of synonyms) {
-        if (base[syn]) {
-          return base[syn];
+      
+      // Check for partial matches
+      for (const [key, value] of Object.entries(kb)) {
+        if (query.includes(key) || key.includes(query)) {
+          return { found: true, answer: value };
         }
       }
     }
-    return null;
+    return { found: false };
   }
 
-  // 4. External resource search
-  externalResourceSearch(query) {
-    if (typeof searchExternalResources === 'function') {
-      return searchExternalResources(query);
+  // Query advanced knowledge system
+  async queryAdvancedKnowledge(query) {
+    if (typeof searchExternalResources !== 'function') {
+      console.error("Reader-link system not available");
+      return null;
     }
-    return null;
-  }
-
-  // Helper methods
-  getSynonyms(term) {
-    // Basic synonym mapping - can be expanded
-    const synonymMap = {
-      'how': ['what is', 'explain', 'describe'],
-      'create': ['make', 'build', 'generate'],
-      'error': ['problem', 'issue', 'bug']
-    };
     
-    return [term, ...(synonymMap[term] || [])];
-  }
-
-  getDefaultResponse(query) {
-    const suggestions = [
-      `Could you rephrase "${query}"?`,
-      "I'm still learning about that topic.",
-      "Would you like me to search external resources for this?"
-    ];
-    return suggestions[Math.floor(Math.random() * suggestions.length)];
+    try {
+      const response = await searchExternalResources(query);
+      return {
+        answer: response.answer,
+        sources: response.sources,
+        links: response.links,
+        specialContent: response.specialContent
+      };
+    } catch (error) {
+      console.error("Advanced knowledge error:", error);
+      return null;
+    }
   }
 }
 
-// Initialize the processor with knowledge bases
-const knowledgeProcessor = new KnowledgeProcessor();
+// Initialize the engine
+const knowledgeEngine = new KnowledgeEngine();
 
 // Main exported function
-function processUserInput(input) {
-  // Initialize with available knowledge bases
-  knowledgeProcessor.initKnowledgeBases(
-    typeof knowledge1 !== 'undefined' ? knowledge1 : {},
-    typeof knowledge2 !== 'undefined' ? knowledge2 : {},
-    typeof textLinkDB !== 'undefined' ? textLinkDB : {},
-    typeof coderLinkDB !== 'undefined' ? coderLinkDB : {},
-    typeof imageLinkDB !== 'undefined' ? imageLinkDB : {}
-  );
-  
-  return knowledgeProcessor.processUserInput(input);
+async function processUserInput(input) {
+  return await knowledgeEngine.processInput(input);
 }
+
+// Public API
+window.KnowledgeEngine = {
+  processUserInput,
+  instance: knowledgeEngine
+};
