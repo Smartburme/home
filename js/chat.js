@@ -1,4 +1,4 @@
-// chat.js - Advanced Chat Interface with Knowledge System Integration
+// chat.js - Advanced Chat Interface with Full System Integration
 class ChatSystem {
   constructor() {
     this.initElements();
@@ -11,7 +11,9 @@ class ChatSystem {
     this.userInput = document.getElementById('user-input');
     this.sendBtn = document.getElementById('send-btn');
     this.chatMessages = document.getElementById('chat-messages');
+    this.historyItems = document.getElementById('history-items');
     this.systemStatus = document.getElementById('system-status');
+    this.clearChatBtn = document.getElementById('clear-chat');
     this.typingIndicator = this.createTypingIndicator();
     this.chatMessages.appendChild(this.typingIndicator);
   }
@@ -20,26 +22,21 @@ class ChatSystem {
     this.state = {
       isProcessing: false,
       messageHistory: this.loadChatHistory(),
-      currentMode: 'basic',
-      knowledgeSources: {
-        basic: ['knowledge-1.js', 'knowledge-2.js'],
-        advanced: {
-          text: ['text-link.js', 'text-knowledge.js'],
-          code: ['coder-link.js', 'coder-knowledge.js'],
-          image: ['image-link.js', 'image-knowledge.js']
-        }
-      }
+      currentMode: 'basic'
     };
   }
 
   setupEventListeners() {
     this.sendBtn.addEventListener('click', () => this.sendMessage());
+    this.clearChatBtn.addEventListener('click', () => this.clearChat());
+    
     this.userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         this.sendMessage();
       }
     });
+    
     this.userInput.addEventListener('input', () => this.adjustInputHeight());
   }
 
@@ -51,35 +48,33 @@ class ChatSystem {
   }
 
   async sendMessage() {
-    if (this.state.isProcessing) return;
+    if (this.state.isProcessing || !this.userInput.value.trim()) return;
     
     const message = this.userInput.value.trim();
-    if (!message) return;
-
-    // Display user message
     const userMsg = this.createMessage('user', message);
+    
     this.displayMessage(userMsg);
     this.saveToHistory(userMsg);
     this.clearInput();
-
-    // Process message
     this.showTypingIndicator();
+    
     this.state.isProcessing = true;
 
     try {
-      const response = await this.processUserQuery(message);
+      // Process through the knowledge engine
+      const response = await this.processMessage(message);
       const botMsg = this.createMessage('bot', response.content, response.links);
       
       this.displayMessage(botMsg);
       this.saveToHistory(botMsg);
       this.updateSystemStatus(response.mode);
       
-      // Handle any links or special content
+      // Handle any special content (images, code snippets)
       if (response.specialContent) {
-        this.handleSpecialContent(response.specialContent);
+        this.displaySpecialContent(response.specialContent, botMsg);
       }
     } catch (error) {
-      console.error("Chat processing error:", error);
+      console.error("Chat error:", error);
       this.displayErrorMessage();
     } finally {
       this.hideTypingIndicator();
@@ -87,70 +82,16 @@ class ChatSystem {
     }
   }
 
-  async processUserQuery(message) {
-    // First try basic knowledge
-    let response = processUserInput(message);
-    let mode = 'basic';
-    let links = [];
-    let specialContent = null;
-
-    // If no answer from basic knowledge, try advanced
-    if (response.includes("I don't know")) {
-      const advancedResponse = await this.queryAdvancedKnowledge(message);
-      if (advancedResponse) {
-        response = advancedResponse.content;
-        mode = 'advanced';
-        links = advancedResponse.links || [];
-        specialContent = advancedResponse.specialContent || null;
-      }
+  async processMessage(message) {
+    // Use the knowledge engine to process the message
+    if (!window.KnowledgeEngine) {
+      throw new Error("Knowledge engine not available");
     }
-
-    return { content: response, mode, links, specialContent };
-  }
-
-  async queryAdvancedKnowledge(query) {
-    try {
-      // Determine query type (text, code, or image)
-      const queryType = this.determineQueryType(query);
-      
-      // Load appropriate knowledge files if not already loaded
-      await this.loadKnowledgeFiles(queryType);
-      
-      // Process through reader-link system
-      const response = await searchExternalResources(query, queryType);
-      
-      return {
-        content: response.answer,
-        links: response.resources,
-        specialContent: response.specialContent
-      };
-    } catch (error) {
-      console.error("Advanced knowledge error:", error);
-      return null;
-    }
-  }
-
-  determineQueryType(query) {
-    const codingKeywords = ['code', 'program', 'function', 'algorithm'];
-    const imageKeywords = ['image', 'photo', 'picture', 'graphic'];
     
-    if (codingKeywords.some(keyword => query.toLowerCase().includes(keyword))) {
-      return 'code';
-    } else if (imageKeywords.some(keyword => query.toLowerCase().includes(keyword))) {
-      return 'image';
-    }
-    return 'text';
+    return await KnowledgeEngine.processUserInput(message);
   }
 
-  async loadKnowledgeFiles(type) {
-    const files = this.state.knowledgeSources.advanced[type];
-    if (!files) return;
-    
-    // Implementation would actually load JS files here
-    console.log(`Loading ${type} knowledge files:`, files);
-  }
-
-  // UI Helper Methods
+  // UI Methods
   createMessage(sender, content, links = [], timestamp = new Date()) {
     return { sender, content, links, timestamp };
   }
@@ -159,24 +100,35 @@ class ChatSystem {
     const messageElement = document.createElement('div');
     messageElement.className = `message ${msg.sender}-message`;
     
-    // Content
+    // Message content
     const contentElement = document.createElement('div');
     contentElement.className = 'message-content';
     contentElement.innerHTML = this.formatContent(msg.content);
     messageElement.appendChild(contentElement);
     
-    // Links
-    if (msg.links.length > 0) {
+    // Add links if available
+    if (msg.links && msg.links.length > 0) {
       const linksElement = document.createElement('div');
       linksElement.className = 'message-links';
-      linksElement.innerHTML = '<strong>Recommended Resources:</strong><br>' + 
-        msg.links.map(link => 
-          `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.title}</a>`
-        ).join('<br>');
+      
+      const linksTitle = document.createElement('strong');
+      linksTitle.textContent = 'Recommended Resources:';
+      linksElement.appendChild(linksTitle);
+      
+      msg.links.forEach(link => {
+        const linkElement = document.createElement('a');
+        linkElement.href = link.url;
+        linkElement.target = '_blank';
+        linkElement.rel = 'noopener noreferrer';
+        linkElement.textContent = link.title;
+        linksElement.appendChild(linkElement);
+        linksElement.appendChild(document.createElement('br'));
+      });
+      
       messageElement.appendChild(linksElement);
     }
     
-    // Timestamp
+    // Add timestamp
     const timeElement = document.createElement('div');
     timeElement.className = 'message-time';
     timeElement.textContent = this.formatTime(msg.timestamp);
@@ -187,6 +139,38 @@ class ChatSystem {
     
     if (!isHistory) {
       messageElement.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    return messageElement;
+  }
+
+  displaySpecialContent(content, parentMsg) {
+    if (!content || !parentMsg) return;
+    
+    let contentElement;
+    
+    switch(content.type) {
+      case 'code':
+        contentElement = document.createElement('pre');
+        contentElement.className = 'code-snippet';
+        contentElement.textContent = content.value;
+        break;
+        
+      case 'image':
+        contentElement = document.createElement('img');
+        contentElement.className = 'embedded-image';
+        contentElement.src = content.value;
+        contentElement.alt = 'Related image content';
+        break;
+        
+      default:
+        return;
+    }
+    
+    // Find the message element and append the special content
+    const messages = this.chatMessages.getElementsByClassName(`${parentMsg.sender}-message`);
+    if (messages.length > 0) {
+      messages[messages.length - 1].appendChild(contentElement);
     }
   }
 
@@ -201,9 +185,23 @@ class ChatSystem {
   }
 
   displayHistory() {
+    this.historyItems.innerHTML = '';
     this.state.messageHistory.forEach(msg => {
-      this.displayMessage(msg, true);
+      if (msg.sender !== 'system') {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.textContent = msg.content.length > 30 
+          ? msg.content.substring(0, 30) + '...' 
+          : msg.content;
+        historyItem.addEventListener('click', () => this.resendMessage(msg));
+        this.historyItems.appendChild(historyItem);
+      }
     });
+  }
+
+  resendMessage(msg) {
+    this.userInput.value = msg.content;
+    this.userInput.focus();
   }
 
   // Utility Methods
@@ -223,7 +221,6 @@ class ChatSystem {
     const indicator = document.createElement('div');
     indicator.className = 'typing-indicator';
     indicator.innerHTML = '<span></span><span></span><span></span>';
-    indicator.style.display = 'none';
     return indicator;
   }
 
@@ -260,6 +257,7 @@ class ChatSystem {
     }
     
     localStorage.setItem('chatHistory', JSON.stringify(this.state.messageHistory));
+    this.displayHistory();
   }
 
   loadChatHistory() {
@@ -270,35 +268,38 @@ class ChatSystem {
     }));
   }
 
+  clearChat() {
+    if (confirm("Are you sure you want to clear the chat history?")) {
+      this.chatMessages.innerHTML = '';
+      this.typingIndicator = this.createTypingIndicator();
+      this.chatMessages.appendChild(this.typingIndicator);
+      this.state.messageHistory = [];
+      localStorage.removeItem('chatHistory');
+      this.displaySystemMessage("Chat history cleared. Start a new conversation!");
+    }
+  }
+
   updateSystemStatus(mode) {
     if (this.state.currentMode !== mode) {
       this.state.currentMode = mode;
-      this.systemStatus.textContent = mode === 'advanced' ? 
-        'Advanced Knowledge Mode' : 'Basic Knowledge Mode';
-      this.systemStatus.className = mode === 'advanced' ? 'advanced-mode' : 'basic-mode';
+      
+      const statusText = this.systemStatus.querySelector('span:not(.status-indicator)');
+      const statusIndicator = this.systemStatus.querySelector('.status-indicator');
+      
+      if (mode === 'advanced') {
+        statusText.textContent = 'Advanced Mode';
+        statusIndicator.classList.remove('basic');
+        statusIndicator.classList.add('advanced');
+      } else {
+        statusText.textContent = 'Basic Mode';
+        statusIndicator.classList.remove('advanced');
+        statusIndicator.classList.add('basic');
+      }
     }
-  }
-
-  handleSpecialContent(content) {
-    // Handle images, code snippets, etc.
-    if (content.type === 'code') {
-      const codeElement = document.createElement('pre');
-      codeElement.className = 'code-snippet';
-      codeElement.textContent = content.value;
-      this.chatMessages.appendChild(codeElement);
-    }
-    // Add other special content handlers as needed
   }
 }
 
-// Initialize the chat system when DOM is loaded
+// Initialize when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-  const chatSystem = new ChatSystem();
+  new ChatSystem();
 });
-
-// Public interface for other components
-function sendChatMessage(message) {
-  // Can be called from other components if needed
-  const chatSystem = new ChatSystem();
-  chatSystem.sendMessage(message);
-          }
