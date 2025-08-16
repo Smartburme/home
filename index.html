@@ -3,14 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Chat App</title>
+    <title>AI Assistant | Smart Chat Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--success-color);
+        }
+        
+        .logo h1 {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 1.5rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        main {
+            flex: 1;
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 1rem;
+            gap: 1rem;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .chat-history h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .history-item {
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .history-item:hover {
+            background: #f0f2f5;
+        }
+        
+        .settings-btn {
+            background: var(--light-color);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .settings-btn:hover {
+            background: #e9ecef;
+        }
+        
+        #chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        #chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background: #f0f2f5;
+            color: var(--dark-color);
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-time {
+            display: block;
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 1rem;
+            gap: 0.5rem;
+            align-self: flex-start;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #adb5bd;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .input-container {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+            gap: 0.5rem;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 25px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+        
+        #user-input:focus {
+            border-color: var(--accent-color);
+        }
+        
+        #send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #send-btn:hover {
+            background: var(--secondary-color);
+        }
+        
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .feature-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .feature-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #6c757d;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+                padding: 0;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-radius: 0;
+            }
+            
+            #chat-container {
+                border-radius: 0;
+                height: calc(100vh - 60px);
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-messages"></div>
-        <input type="text" id="user-input" placeholder="Type your message...">
-        <button id="send-btn">Send</button>
-    </div>
+    <header>
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+            <h1>AI Assistant</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="#"><i class="fas fa-question-circle"></i> Help</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <aside class="sidebar">
+            <div class="chat-history">
+                <h3><i class="fas fa-history"></i> Chat History</h3>
+                <div class="history-item">How to create a function?</div>
+                <div class="history-item">Explain AI technology</div>
+                <div class="history-item">Python vs JavaScript</div>
+                <!-- History items will be populated by JavaScript -->
+            </div>
+            <button class="settings-btn">
+                <i class="fas fa-sliders-h"></i> Settings
+            </button>
+        </aside>
+        
+        <div id="chat-container">
+            <div id="chat-messages">
+                <!-- Messages will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="features">
+                <button class="feature-btn" title="Attach file"><i class="fas fa-paperclip"></i></button>
+                <button class="feature-btn" title="Voice input"><i class="fas fa-microphone"></i></button>
+                <button class="feature-btn" title="Clear chat"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>© 2023 AI Assistant. All rights reserved. Powered by advanced AI technology.</p>
+    </footer>
 
     <!-- JavaScript Files -->
     <script src="js/engine.js"></script>
@@ -18,4 +372,4 @@
     <script src="docs/knowledge-2.js"></script>
     <script src="js/chat.js"></script>
 </body>
-</html>
+    </html>
