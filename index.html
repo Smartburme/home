@@ -1,58 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Myanmar Chatbot</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Mini Chat AI</title>
+  <style>
+    body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
+    .sidebar { width:200px; background:#f2f2f2; padding:10px; }
+    .main { flex:1; display:flex; flex-direction:column; }
+    #chatBox { flex:1; padding:10px; overflow-y:auto; background:#fff; }
+    .inputBox { display:flex; border-top:1px solid #ccc; }
+    .inputBox input { flex:1; padding:10px; border:none; }
+    .inputBox button { padding:10px; background:#007bff; border:none; color:white; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Left Sidebar -->
-        <div class="sidebar-left">
-            <button id="settingsBtn">ပြင်ဆင်မှုများ</button>
-            <button id="aboutBtn">အကြောင်းအရာ</button>
-        </div>
+  <!-- Left menu -->
+  <div class="sidebar">
+    <h3>⚙ Settings</h3>
+    <button>Settings</button><br/>
+    <button>About</button>
+  </div>
 
-        <!-- Main Chat Area -->
-        <div class="main-content">
-            <div id="chatContainer"></div>
-            <div class="input-area">
-                <input type="text" id="userInput" placeholder="စာရိုက်ထည့်ပါ...">
-                <button id="sendBtn">ပို့ရန်</button>
-            </div>
-        </div>
-
-        <!-- Right Sidebar -->
-        <div class="sidebar-right">
-            <button id="newChatBtn">စကားပြောအသစ်</button>
-            <div id="historyContainer"></div>
-            <button id="clearBtn">ရှင်းလင်းရန်</button>
-        </div>
+  <!-- Chat box -->
+  <div class="main">
+    <div id="chatBox"></div>
+    <div class="inputBox">
+      <input id="userInput" type="text" placeholder="မေးစရာ..."/>
+      <button id="btnSend">Send</button>
     </div>
+  </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>ပြင်ဆင်မှုများ</h2>
-            <!-- Settings content here -->
-        </div>
-    </div>
+  <!-- Right menu -->
+  <div class="sidebar">
+    <h3>📑 Menu</h3>
+    <button id="btnNew">New Chat</button><br/>
+    <button id="btnHistory">History</button><br/>
+    <button id="btnClear">Clear</button>
+  </div>
 
-    <!-- About Modal -->
-    <div id="aboutModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>အကြောင်းအရာ</h2>
-            <p>ဤသည် Myanmar Chatbot ပရောဂျက်ဖြစ်ပါသည်။</p>
-        </div>
-    </div>
-
-    <script src="js/index.js"></script>
-    <script src="js/chat.js"></script>
-    <script src="js/engine.js"></script>
-    <script src="knowledge.js"></script>
-    <script src="generator.js"></script>
+  <script type="module" src="./js/chat.js"></script>
 </body>
 </html>
