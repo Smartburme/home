@@ -3,93 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Knowledge Assistant</title>
+    <title>Myanmar Chatbot</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo-container">
-                <i class="fas fa-robot logo-icon"></i>
-                <h1 class="logo-text">AI Knowledge Assistant</h1>
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar-left">
+            <button id="settingsBtn">ပြင်ဆင်မှုများ</button>
+            <button id="aboutBtn">အကြောင်းအရာ</button>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-content">
+            <div id="chatContainer"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="စာရိုက်ထည့်ပါ...">
+                <button id="sendBtn">ပို့ရန်</button>
             </div>
-            <div class="system-status" id="system-status">
-                <span class="status-indicator basic"></span>
-                <span>Basic Mode</span>
-            </div>
-        </header>
+        </div>
 
-        <main class="chat-container">
-            <aside class="sidebar">
-                <div class="history-panel">
-                    <h3><i class="fas fa-history"></i> Chat History</h3>
-                    <div class="history-items" id="history-items">
-                        <!-- History will be populated by JavaScript -->
-                    </div>
-                </div>
-                <button class="settings-btn">
-                    <i class="fas fa-cog"></i> Settings
-                </button>
-            </aside>
-
-            <div class="chat-main">
-                <div class="messages-container" id="chat-messages">
-                    <!-- Messages will be inserted here -->
-                </div>
-
-                <div class="input-container">
-                    <div class="input-wrapper">
-                        <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
-                        <button id="send-btn" class="send-button">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div class="quick-actions">
-                        <button class="action-btn" title="Attach file"><i class="fas fa-paperclip"></i></button>
-                        <button class="action-btn" title="Voice input"><i class="fas fa-microphone"></i></button>
-                        <button class="action-btn" title="Clear chat" id="clear-chat"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <footer class="app-footer">
-            <p>© 2023 AI Knowledge Assistant. All rights reserved.</p>
-        </footer>
+        <!-- Right Sidebar -->
+        <div class="sidebar-right">
+            <button id="newChatBtn">စကားပြောအသစ်</button>
+            <div id="historyContainer"></div>
+            <button id="clearBtn">ရှင်းလင်းရန်</button>
+        </div>
     </div>
 
-    <!-- Knowledge Base System -->
-    <!-- Basic Knowledge -->
-    <script src="docs/knowledge-1.js"></script>
-    <script src="docs/knowledge-2.js"></script>
-    
-    <!-- Link Databases -->
-    <script src="docs/text-link.js"></script>
-    <script src="docs/coder-link.js"></script>
-    <script src="docs/image-link.js"></script>
-    
-    <!-- Knowledge Resources -->
-    <script src="knowledge/text-knowledge.js"></script>
-    <script src="knowledge/coder-knowledge.js"></script>
-    <script src="knowledge/image-knowledge.js"></script>
-    
-    <!-- Processing Engine -->
-    <script src="js/reader-link.js"></script>
-    <script src="js/engine.js"></script>
-    
-    <!-- Chat Interface -->
-    <script src="js/chat.js"></script>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>ပြင်ဆင်မှုများ</h2>
+            <!-- Settings content here -->
+        </div>
+    </div>
 
-    <script>
-        // Initialize after all scripts are loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.ChatSystem) {
-                new window.ChatSystem();
-            } else {
-                console.error("ChatSystem not found");
-            }
-        });
-    </script>
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>အကြောင်းအရာ</h2>
+            <p>ဤသည် Myanmar Chatbot ပရောဂျက်ဖြစ်ပါသည်။</p>
+        </div>
+    </div>
+
+    <script src="js/index.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="knowledge.js"></script>
+    <script src="generator.js"></script>
 </body>
-                                        </html>
+</html>
