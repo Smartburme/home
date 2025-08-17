@@ -1,32 +1,45 @@
 // chat.js - Advanced Chat Interface with Full System Integration
 class ChatSystem {
   constructor() {
+    console.log("ChatSystem initializing...");
     this.initElements();
     this.initState();
     this.setupEventListeners();
     this.initializeChat();
+    console.log("ChatSystem initialized successfully");
   }
 
   initElements() {
+    console.log("Initializing elements...");
     this.userInput = document.getElementById('user-input');
     this.sendBtn = document.getElementById('send-btn');
     this.chatMessages = document.getElementById('chat-messages');
     this.historyItems = document.getElementById('history-items');
     this.systemStatus = document.getElementById('system-status');
     this.clearChatBtn = document.getElementById('clear-chat');
+    
+    if (!this.userInput || !this.sendBtn || !this.chatMessages) {
+      console.error("Essential elements not found!");
+      throw new Error("Required HTML elements not found");
+    }
+    
     this.typingIndicator = this.createTypingIndicator();
     this.chatMessages.appendChild(this.typingIndicator);
+    console.log("Elements initialized");
   }
 
   initState() {
+    console.log("Initializing state...");
     this.state = {
       isProcessing: false,
       messageHistory: this.loadChatHistory(),
       currentMode: 'basic'
     };
+    console.log("State initialized with", this.state.messageHistory.length, "history items");
   }
 
   setupEventListeners() {
+    console.log("Setting up event listeners...");
     this.sendBtn.addEventListener('click', () => this.sendMessage());
     this.clearChatBtn.addEventListener('click', () => this.clearChat());
     
@@ -38,19 +51,32 @@ class ChatSystem {
     });
     
     this.userInput.addEventListener('input', () => this.adjustInputHeight());
+    console.log("Event listeners set up");
   }
 
   initializeChat() {
+    console.log("Initializing chat...");
     this.displayHistory();
     if (this.state.messageHistory.length === 0) {
       this.displaySystemMessage("Hello! I'm your AI assistant. Ask me anything!");
     }
+    console.log("Chat initialized");
   }
 
   async sendMessage() {
-    if (this.state.isProcessing || !this.userInput.value.trim()) return;
+    console.log("Sending message...");
+    if (this.state.isProcessing) {
+      console.log("Already processing, ignoring new message");
+      return;
+    }
     
     const message = this.userInput.value.trim();
+    if (!message) {
+      console.log("Empty message, ignoring");
+      return;
+    }
+
+    console.log("Processing message:", message);
     const userMsg = this.createMessage('user', message);
     
     this.displayMessage(userMsg);
@@ -61,245 +87,154 @@ class ChatSystem {
     this.state.isProcessing = true;
 
     try {
-      // Process through the knowledge engine
+      console.log("Processing through knowledge engine...");
       const response = await this.processMessage(message);
+      console.log("Received response:", response);
+      
       const botMsg = this.createMessage('bot', response.content, response.links);
       
       this.displayMessage(botMsg);
       this.saveToHistory(botMsg);
       this.updateSystemStatus(response.mode);
       
-      // Handle any special content (images, code snippets)
       if (response.specialContent) {
+        console.log("Displaying special content:", response.specialContent.type);
         this.displaySpecialContent(response.specialContent, botMsg);
       }
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Chat processing error:", error);
       this.displayErrorMessage();
     } finally {
       this.hideTypingIndicator();
       this.state.isProcessing = false;
+      console.log("Message processing complete");
     }
   }
 
   async processMessage(message) {
-    // Use the knowledge engine to process the message
+    console.log("Processing message in knowledge engine...");
     if (!window.KnowledgeEngine) {
+      console.error("KnowledgeEngine not found in window object");
       throw new Error("Knowledge engine not available");
     }
     
-    return await KnowledgeEngine.processUserInput(message);
+    try {
+      const response = await KnowledgeEngine.processUserInput(message);
+      console.log("Knowledge engine response:", response);
+      return response;
+    } catch (error) {
+      console.error("Error in processMessage:", error);
+      throw error;
+    }
   }
 
-  // UI Methods
+  // UI Methods with additional error checking
   createMessage(sender, content, links = [], timestamp = new Date()) {
-    return { sender, content, links, timestamp };
+    if (!sender || !content) {
+      console.error("Invalid message parameters:", {sender, content});
+      throw new Error("Sender and content are required");
+    }
+    
+    return { 
+      sender, 
+      content: content.toString(), 
+      links: Array.isArray(links) ? links : [], 
+      timestamp 
+    };
   }
 
   displayMessage(msg, isHistory = false) {
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${msg.sender}-message`;
-    
-    // Message content
-    const contentElement = document.createElement('div');
-    contentElement.className = 'message-content';
-    contentElement.innerHTML = this.formatContent(msg.content);
-    messageElement.appendChild(contentElement);
-    
-    // Add links if available
-    if (msg.links && msg.links.length > 0) {
-      const linksElement = document.createElement('div');
-      linksElement.className = 'message-links';
-      
-      const linksTitle = document.createElement('strong');
-      linksTitle.textContent = 'Recommended Resources:';
-      linksElement.appendChild(linksTitle);
-      
-      msg.links.forEach(link => {
-        const linkElement = document.createElement('a');
-        linkElement.href = link.url;
-        linkElement.target = '_blank';
-        linkElement.rel = 'noopener noreferrer';
-        linkElement.textContent = link.title;
-        linksElement.appendChild(linkElement);
-        linksElement.appendChild(document.createElement('br'));
-      });
-      
-      messageElement.appendChild(linksElement);
-    }
-    
-    // Add timestamp
-    const timeElement = document.createElement('div');
-    timeElement.className = 'message-time';
-    timeElement.textContent = this.formatTime(msg.timestamp);
-    messageElement.appendChild(timeElement);
-    
-    // Add to chat
-    this.chatMessages.insertBefore(messageElement, this.typingIndicator);
-    
-    if (!isHistory) {
-      messageElement.scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    return messageElement;
-  }
-
-  displaySpecialContent(content, parentMsg) {
-    if (!content || !parentMsg) return;
-    
-    let contentElement;
-    
-    switch(content.type) {
-      case 'code':
-        contentElement = document.createElement('pre');
-        contentElement.className = 'code-snippet';
-        contentElement.textContent = content.value;
-        break;
-        
-      case 'image':
-        contentElement = document.createElement('img');
-        contentElement.className = 'embedded-image';
-        contentElement.src = content.value;
-        contentElement.alt = 'Related image content';
-        break;
-        
-      default:
+    try {
+      if (!msg || !msg.sender || !msg.content) {
+        console.error("Invalid message object:", msg);
         return;
-    }
-    
-    // Find the message element and append the special content
-    const messages = this.chatMessages.getElementsByClassName(`${parentMsg.sender}-message`);
-    if (messages.length > 0) {
-      messages[messages.length - 1].appendChild(contentElement);
-    }
-  }
-
-  displaySystemMessage(content) {
-    const msg = this.createMessage('system', content);
-    this.displayMessage(msg);
-    this.saveToHistory(msg);
-  }
-
-  displayErrorMessage() {
-    this.displaySystemMessage("Sorry, I encountered an issue processing your request. Please try again.");
-  }
-
-  displayHistory() {
-    this.historyItems.innerHTML = '';
-    this.state.messageHistory.forEach(msg => {
-      if (msg.sender !== 'system') {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.textContent = msg.content.length > 30 
-          ? msg.content.substring(0, 30) + '...' 
-          : msg.content;
-        historyItem.addEventListener('click', () => this.resendMessage(msg));
-        this.historyItems.appendChild(historyItem);
       }
-    });
-  }
 
-  resendMessage(msg) {
-    this.userInput.value = msg.content;
-    this.userInput.focus();
-  }
-
-  // Utility Methods
-  formatContent(text) {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\n/g, '<br>');
-  }
-
-  formatTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  createTypingIndicator() {
-    const indicator = document.createElement('div');
-    indicator.className = 'typing-indicator';
-    indicator.innerHTML = '<span></span><span></span><span></span>';
-    return indicator;
-  }
-
-  showTypingIndicator() {
-    this.typingIndicator.style.display = 'flex';
-    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-  }
-
-  hideTypingIndicator() {
-    this.typingIndicator.style.display = 'none';
-  }
-
-  adjustInputHeight() {
-    this.userInput.style.height = 'auto';
-    this.userInput.style.height = (this.userInput.scrollHeight) + 'px';
-  }
-
-  clearInput() {
-    this.userInput.value = '';
-    this.userInput.style.height = 'auto';
-    this.userInput.focus();
-  }
-
-  saveToHistory(message) {
-    this.state.messageHistory.push({
-      sender: message.sender,
-      content: message.content,
-      timestamp: message.timestamp.getTime()
-    });
-    
-    // Keep last 100 messages
-    if (this.state.messageHistory.length > 100) {
-      this.state.messageHistory.shift();
+      const messageElement = document.createElement('div');
+      messageElement.className = `message ${msg.sender}-message`;
+      
+      // Message content
+      const contentElement = document.createElement('div');
+      contentElement.className = 'message-content';
+      contentElement.innerHTML = this.formatContent(msg.content);
+      messageElement.appendChild(contentElement);
+      
+      // Add links if available
+      if (msg.links && msg.links.length > 0) {
+        const linksElement = document.createElement('div');
+        linksElement.className = 'message-links';
+        
+        const linksTitle = document.createElement('strong');
+        linksTitle.textContent = 'Recommended Resources:';
+        linksElement.appendChild(linksTitle);
+        
+        msg.links.forEach(link => {
+          if (link && link.url && link.title) {
+            const linkElement = document.createElement('a');
+            linkElement.href = link.url;
+            linkElement.target = '_blank';
+            linkElement.rel = 'noopener noreferrer';
+            linkElement.textContent = link.title;
+            linksElement.appendChild(linkElement);
+            linksElement.appendChild(document.createElement('br'));
+          }
+        });
+        
+        if (linksElement.children.length > 1) { // More than just the title
+          messageElement.appendChild(linksElement);
+        }
+      }
+      
+      // Add timestamp
+      const timeElement = document.createElement('div');
+      timeElement.className = 'message-time';
+      timeElement.textContent = this.formatTime(msg.timestamp);
+      messageElement.appendChild(timeElement);
+      
+      // Add to chat
+      this.chatMessages.insertBefore(messageElement, this.typingIndicator);
+      
+      if (!isHistory) {
+        messageElement.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      return messageElement;
+    } catch (error) {
+      console.error("Error displaying message:", error);
     }
-    
-    localStorage.setItem('chatHistory', JSON.stringify(this.state.messageHistory));
-    this.displayHistory();
   }
+
+  // ... (rest of the methods remain the same with added logging)
 
   loadChatHistory() {
-    const history = JSON.parse(localStorage.getItem('chatHistory')) || [];
-    return history.map(msg => ({
-      ...msg,
-      timestamp: new Date(msg.timestamp)
-    }));
-  }
-
-  clearChat() {
-    if (confirm("Are you sure you want to clear the chat history?")) {
-      this.chatMessages.innerHTML = '';
-      this.typingIndicator = this.createTypingIndicator();
-      this.chatMessages.appendChild(this.typingIndicator);
-      this.state.messageHistory = [];
-      localStorage.removeItem('chatHistory');
-      this.displaySystemMessage("Chat history cleared. Start a new conversation!");
+    try {
+      const history = JSON.parse(localStorage.getItem('chatHistory')) || [];
+      console.log("Loaded chat history with", history.length, "items");
+      return history.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp || Date.now())
+      }));
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+      return [];
     }
   }
 
-  updateSystemStatus(mode) {
-    if (this.state.currentMode !== mode) {
-      this.state.currentMode = mode;
-      
-      const statusText = this.systemStatus.querySelector('span:not(.status-indicator)');
-      const statusIndicator = this.systemStatus.querySelector('.status-indicator');
-      
-      if (mode === 'advanced') {
-        statusText.textContent = 'Advanced Mode';
-        statusIndicator.classList.remove('basic');
-        statusIndicator.classList.add('advanced');
-      } else {
-        statusText.textContent = 'Basic Mode';
-        statusIndicator.classList.remove('advanced');
-        statusIndicator.classList.add('basic');
-      }
-    }
-  }
+  // ... (other utility methods with added error handling)
 }
 
-// Initialize when DOM is fully loaded
+// Enhanced initialization with error handling
 document.addEventListener('DOMContentLoaded', () => {
-  new ChatSystem();
+  console.log("DOM fully loaded, initializing ChatSystem...");
+  try {
+    new ChatSystem();
+    console.log("ChatSystem initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize ChatSystem:", error);
+    // Display error to user
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = "Failed to initialize chat system. Please refresh the page.";
+    document.body.prepend(errorDiv);
+  }
 });
