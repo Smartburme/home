@@ -4,18 +4,58 @@ const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("userInput");
 const btnSend = document.getElementById("btnSend");
 
-// send button
-btnSend.addEventListener("click", () => {
+function addMessage(text, sender="bot") {
+  const div = document.createElement("div");
+  div.className = `msg ${sender}`;
+  div.textContent = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Save to history
+function saveHistory() {
+  localStorage.setItem("chatHistory", chatBox.innerHTML);
+}
+function loadHistory() {
+  chatBox.innerHTML = localStorage.getItem("chatHistory") || "";
+}
+
+// Send logic
+function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
-  chatBox.innerHTML += `<div>👤 ${text}</div>`;
+  addMessage(text, "user");
   const reply = processMessage(text);
-  chatBox.innerHTML += `<div>🤖 ${reply}</div>`;
+  setTimeout(() => {
+    addMessage(reply, "bot");
+    saveHistory();
+  }, 300);
   input.value = "";
-  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Event listeners
+btnSend.addEventListener("click", sendMessage);
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendMessage();
 });
 
-// Right side buttons
-document.getElementById("btnNew").addEventListener("click", () => chatBox.innerHTML = "🆕 New Chat started");
-document.getElementById("btnHistory").addEventListener("click", () => chatBox.innerHTML += "<div>📜 History (coming soon)</div>");
-document.getElementById("btnClear").addEventListener("click", () => chatBox.innerHTML = "");
+// Right buttons
+document.getElementById("btnNew").addEventListener("click", () => {
+  chatBox.innerHTML = "";
+  saveHistory();
+});
+document.getElementById("btnHistory").addEventListener("click", loadHistory);
+document.getElementById("btnClear").addEventListener("click", () => {
+  localStorage.clear();
+  chatBox.innerHTML = "";
+});
+
+// Theme switch
+document.getElementById("btnTheme").addEventListener("click", () => {
+  const body = document.body;
+  const theme = body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  body.setAttribute("data-theme", theme);
+});
+
+// load history on startup
+loadHistory();
