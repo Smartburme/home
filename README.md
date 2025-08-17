@@ -4,14 +4,22 @@
 
 ## Project Structure
 ```
-your-project/
-├── index.html
-├── js/
-│   ├── chat.js       (Chat UI နဲ့ User Input ကိုကိုင်တွယ်မယ်)
-│   └── engine.js     (Knowledge Base ကနေအဖြေရှာပြီး Processing လုပ်မယ်)
-└── docs/
-    ├── knowledge-1.js (ပထမ Knowledge Base)
-    └── knowledge-2.js (ဒုတိယ Knowledge Base)
+/index.html          - Main application file
+/css/style.css       - All styling
+/js/
+  ├── chat.js        - Chat interface and logic
+  ├── engine.js      - Core processing engine
+  └── reader-link.js - Advanced knowledge processor
+/docs/
+  ├── knowledge-1.js - Basic Q&A pairs
+  ├── knowledge-2.js - More basic Q&A
+  ├── text-link.js   - Text resource processor
+  ├── coder-link.js  - Coding resource processor
+  └── image-link.js  - Image resource processor
+/knowledge/
+  ├── text-knowledge.js    - 100 text resources
+  ├── coder-knowledge.js   - 100 coding resources
+  └── image-knowledge.js   - 100 image resources
 ```
 
 ## 1. index.html ဖိုင်တည်ဆောက်ပုံ
