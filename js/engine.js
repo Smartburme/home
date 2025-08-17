@@ -1,75 +1,67 @@
-// engine.js - Core Knowledge Processing Engine
+// engine.js - Updated Version
 class KnowledgeEngine {
   constructor() {
-    this.knowledgeBases = {};
-    this.initialized = false;
+    this.knowledgeBases = {
+      basic: {},
+      advanced: {}
+    };
   }
 
   // Initialize knowledge bases
-  async init() {
-    if (this.initialized) return;
+  init() {
+    // Basic knowledge
+    this.knowledgeBases.basic.knowledge1 = window.knowledge1 || {};
+    this.knowledgeBases.basic.knowledge2 = window.knowledge2 || {};
     
-    // Load basic knowledge
-    this.knowledgeBases.basic = {
-      knowledge1: typeof knowledge1 !== 'undefined' ? knowledge1 : {},
-      knowledge2: typeof knowledge2 !== 'undefined' ? knowledge2 : {}
-    };
+    // Advanced knowledge
+    this.knowledgeBases.advanced.text = window.textKnowledgeDB || [];
+    this.knowledgeBases.advanced.code = window.coderKnowledgeDB || [];
+    this.knowledgeBases.advanced.image = window.imageKnowledgeDB || [];
     
-    // Initialize reader-link system
-    if (typeof initReaderLink === 'function') {
-      await initReaderLink();
-    }
-    
-    this.initialized = true;
-    console.log("Knowledge engine initialized");
+    console.log("KnowledgeEngine initialized", this.knowledgeBases);
   }
 
   // Main processing function
   async processInput(input) {
-    if (!this.initialized) await this.init();
-    
-    // Clean and prepare input
-    const query = input.trim().toLowerCase();
-    if (!query) return "Please enter a valid query.";
+    if (!input || typeof input !== 'string') {
+      return "Please enter a valid question.";
+    }
 
-    // Try basic knowledge first
+    const query = input.trim().toLowerCase();
+    if (!query) return "Please enter a valid question.";
+
+    // Initialize if not done
+    if (!this.knowledgeBases.basic.knowledge1) {
+      this.init();
+    }
+
+    // 1. Try basic knowledge first
     const basicResponse = this.queryBasicKnowledge(query);
     if (basicResponse.found) {
-      return {
-        content: basicResponse.answer,
-        mode: 'basic',
-        sources: ['knowledge-1.js', 'knowledge-2.js']
-      };
+      console.log("Found in basic knowledge");
+      return basicResponse.answer;
     }
 
-    // Fall back to advanced knowledge
+    // 2. Try advanced knowledge
     const advancedResponse = await this.queryAdvancedKnowledge(query);
     if (advancedResponse) {
-      return {
-        content: advancedResponse.answer,
-        mode: 'advanced',
-        sources: advancedResponse.sources,
-        links: advancedResponse.links,
-        specialContent: advancedResponse.specialContent
-      };
+      console.log("Found in advanced knowledge");
+      return advancedResponse;
     }
 
-    // Final fallback
-    return {
-      content: "I couldn't find information about that topic.",
-      mode: 'basic',
-      sources: []
-    };
+    // 3. Final fallback
+    return "I don't have information about that yet. Please try another question.";
   }
 
-  // Query basic knowledge bases
+  // Query basic knowledge
   queryBasicKnowledge(query) {
     for (const [name, kb] of Object.entries(this.knowledgeBases.basic)) {
+      // Exact match
       if (kb[query]) {
         return { found: true, answer: kb[query] };
       }
       
-      // Check for partial matches
+      // Partial match
       for (const [key, value] of Object.entries(kb)) {
         if (query.includes(key) || key.includes(query)) {
           return { found: true, answer: value };
@@ -79,38 +71,57 @@ class KnowledgeEngine {
     return { found: false };
   }
 
-  // Query advanced knowledge system
+  // Query advanced knowledge
   async queryAdvancedKnowledge(query) {
-    if (typeof searchExternalResources !== 'function') {
-      console.error("Reader-link system not available");
-      return null;
-    }
-    
     try {
-      const response = await searchExternalResources(query);
-      return {
-        answer: response.answer,
-        sources: response.sources,
-        links: response.links,
-        specialContent: response.specialContent
-      };
+      // Determine query type
+      const queryType = this.determineQueryType(query);
+      
+      // Get appropriate knowledge base
+      const knowledgeBase = this.knowledgeBases.advanced[queryType];
+      if (!knowledgeBase || knowledgeBase.length === 0) {
+        console.error("No knowledge base for", queryType);
+        return null;
+      }
+      
+      // Find matching resources
+      const matches = knowledgeBase.filter(item =>
+        item.keywords.some(kw => query.includes(kw.toLowerCase()))
+      );
+      
+      if (matches.length === 0) return null;
+      
+      // Format response
+      const topMatch = matches[0];
+      let response = `I found information about "${query}": ${topMatch.title}\n`;
+      response += `You can learn more here: ${topMatch.url}`;
+      
+      return response;
     } catch (error) {
-      console.error("Advanced knowledge error:", error);
+      console.error("Advanced query error:", error);
       return null;
     }
   }
+
+  // Determine query type (text, code, or image)
+  determineQueryType(query) {
+    const codingKeywords = ['code', 'program', 'function', 'algorithm', 'python', 'javascript'];
+    const imageKeywords = ['image', 'photo', 'picture', 'graphic', 'png', 'jpg'];
+    
+    if (codingKeywords.some(kw => query.includes(kw))) {
+      return 'code';
+    } else if (imageKeywords.some(kw => query.includes(kw))) {
+      return 'image';
+    }
+    return 'text';
+  }
 }
 
-// Initialize the engine
+// Initialize and export
 const knowledgeEngine = new KnowledgeEngine();
+knowledgeEngine.init(); // Initialize immediately
 
-// Main exported function
-async function processUserInput(input) {
-  return await knowledgeEngine.processInput(input);
-}
-
-// Public API
 window.KnowledgeEngine = {
-  processUserInput,
+  processUserInput: (input) => knowledgeEngine.processInput(input),
   instance: knowledgeEngine
 };
