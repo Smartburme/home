@@ -1,12 +1,23 @@
-import { handleKnowledge } from "../knowledge.js";
-import { handleGenerator } from "../generator.js";
+import { getKnowledgeAnswer } from "./knowledge.js";
+import { getGeneratorAnswer } from "./generator.js";
 
-// main process
-export function processMessage(input) {
-  // generator commands
-  if (input.startsWith("text:") || input.startsWith("image:") || input.startsWith("code:")) {
-    return handleGenerator(input);
+export function processMessage(message) {
+  message = message.toLowerCase();
+
+  // မေးခွန်းကို စိစစ်မယ်
+  if (["hi", "hello", "hey"].includes(message)) {
+    return getKnowledgeAnswer(message);
   }
-  // normal Q/A
-  return handleKnowledge(input);
+
+  if (message.includes("text generate")) {
+    return getGeneratorAnswer("text", message);
+  }
+  if (message.includes("image generate")) {
+    return getGeneratorAnswer("image", message);
+  }
+  if (message.includes("code generate")) {
+    return getGeneratorAnswer("code", message);
+  }
+
+  return "မသိသေးပါ... မင်းထပ်ရှင်းပြပါ 🙃";
 }
