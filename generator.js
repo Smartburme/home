@@ -1,17 +1,10 @@
-const Generator = {
-    process: function(message) {
-        if (message.includes('text')) {
-            return TextGenerator.generate(message);
-        } else if (message.includes('image')) {
-            return ImageGenerator.generate(message);
-        } else if (message.includes('code')) {
-            return CodeGenerator.generate(message);
-        }
-        return "မည်သည့်အရာကို generate လုပ်ရမည်နည်း? (text, image, code)";
-    }
-};
+import { generateText } from "./docs/knowledge/text.js";
+import { generateImage } from "./docs/knowledge/image.js";
+import { generateCode } from "./docs/knowledge/coder.js";
 
-// Load generator modules
-import { TextGenerator } from './docs/knowledge/text.js';
-import { ImageGenerator } from './docs/knowledge/image.js';
-import { CodeGenerator } from './docs/knowledge/coder.js';
+export function handleGenerator(input) {
+  if (input.startsWith("text:")) return generateText(input.replace("text:","").trim());
+  if (input.startsWith("image:")) return generateImage(input.replace("image:","").trim());
+  if (input.startsWith("code:")) return generateCode(input.replace("code:","").trim());
+  return "🚫 Generator format မမှန်ပါ";
+}
