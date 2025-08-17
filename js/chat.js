@@ -20,16 +20,21 @@ function loadHistory() {
   chatBox.innerHTML = localStorage.getItem("chatHistory") || "";
 }
 
-// Send logic
+// Send logic (FIXED)
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
+
+  // ✅ user စာကို အရင်ထည့်
   addMessage(text, "user");
+
+  // ✅ engine.js ကိုခေါ်ပြီး bot အဖြေထည့်
   const reply = processMessage(text);
   setTimeout(() => {
     addMessage(reply, "bot");
     saveHistory();
-  }, 300);
+  }, 200);
+
   input.value = "";
 }
 
