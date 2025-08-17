@@ -1,40 +1,21 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const chatContainer = document.getElementById('chatContainer');
+import { processMessage } from "./engine.js";
 
-    sendBtn.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
-    });
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("userInput");
+const btnSend = document.getElementById("btnSend");
 
-    function sendMessage() {
-        const message = userInput.value.trim();
-        if (message) {
-            // Display user message
-            displayMessage(message, 'user');
-            
-            // Send to engine
-            processUserMessage(message);
-            
-            // Clear input
-            userInput.value = '';
-        }
-    }
-
-    function displayMessage(message, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}`;
-        messageDiv.textContent = message;
-        chatContainer.appendChild(messageDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    // Connect with engine.js
-    function processUserMessage(message) {
-        const response = Engine.process(message);
-        setTimeout(() => {
-            displayMessage(response, 'bot');
-        }, 500);
-    }
+// send button
+btnSend.addEventListener("click", () => {
+  const text = input.value.trim();
+  if (!text) return;
+  chatBox.innerHTML += `<div>👤 ${text}</div>`;
+  const reply = processMessage(text);
+  chatBox.innerHTML += `<div>🤖 ${reply}</div>`;
+  input.value = "";
+  chatBox.scrollTop = chatBox.scrollHeight;
 });
+
+// Right side buttons
+document.getElementById("btnNew").addEventListener("click", () => chatBox.innerHTML = "🆕 New Chat started");
+document.getElementById("btnHistory").addEventListener("click", () => chatBox.innerHTML += "<div>📜 History (coming soon)</div>");
+document.getElementById("btnClear").addEventListener("click", () => chatBox.innerHTML = "");
